@@ -2,27 +2,28 @@
   <img src="./img.png" alt="Project Banner" width="100%">
 </p>
 
-# [Project Name] 🎯
+# BUS TRACKING SYSTEM 🎯
 
 ## Basic Details
 
-### Team Name: [Name]
+### Team Name: CodeCore
 
 ### Team Members
-- Member 1: [Name] - [College]
-- Member 2: [Name] - [College]
+- Member 1: Afsa abdul jabbar- AISAT
+- Member 2: Asifa C A- AISAT
 
 ### Hosted Project Link
 [mention your project hosted link here]
 
 ### Project Description
-[2-3 lines about what your project does]
+The Bus Tracking System is a smart solution that allows real-time tracking of private buses using GPS technology. It provides live location updates, route details, and arrival times to improve safety, efficiency, and passenger convenience.
 
 ### The Problem statement
-[What problem are you solving?]
-
+Private buses often operate without a proper real-time tracking system, making it difficult for passengers to determine the exact location and expected arrival time of the bus. This results in extended waiting periods, uncertainty, inefficient route management, and communication gaps between drivers and passengers. Therefore, there is a need to develop an efficient and cost-effective real-time bus tracking system that provides accurate location updates and enhances safety, reliability, and overall convenience.
 ### The Solution
-[How are you solving it?]
+To overcome the challenges of uncertain bus arrival times and communication gaps, a real-time Bus Tracking System is proposed. The system utilizes a GPS module installed inside the bus to continuously capture location data and transmit it to a central server via an internet connection. The live bus location is displayed on a web or mobile application using Google Maps, enabling passengers to track the bus position and accurately estimate its arrival time.
+
+This solution enhances route management, minimizes passenger waiting time, improves safety, and strengthens communication between drivers and passengers.
 
 ---
 
@@ -31,10 +32,10 @@
 ### Technologies/Components Used
 
 **For Software:**
-- Languages used: [e.g., JavaScript, Python, Java]
+- Languages used: python
 - Frameworks used: [e.g., React, Django, Spring Boot]
 - Libraries used: [e.g., axios, pandas, JUnit]
-- Tools used: [e.g., VS Code, Git, Docker]
+- Tools used: git,vs cod 
 
 **For Hardware:**
 - Main components: [List main components]
@@ -46,10 +47,10 @@
 ## Features
 
 List the key features of your project:
-- Feature 1: [Description]
-- Feature 2: [Description]
-- Feature 3: [Description]
-- Feature 4: [Description]
+- Feature 1: Real-Time Location Tracking
+- Feature 2: Live Map Display
+- Feature 3: Estimated Time of Arrival (ETA)
+- Feature 4: Route Information
 
 ---
 

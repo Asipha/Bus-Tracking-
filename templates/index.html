@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🚌 BusTrack Live</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --panel: #13161e;
+      --card: #1a1e2a;
+      --border: #252a38;
+      --accent: #f5a623;
+      --green: #22c55e;
+      --red: #ef4444;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 320px;
+      min-width: 320px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #sidebar-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #sidebar-header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    #sidebar-header h1 span { color: var(--accent); }
+
+    #sidebar-header p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    #live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 10px;
+    }
+
+    #live-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    #bus-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bus-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .bus-card:hover { border-color: var(--accent); transform: translateX(3px); }
+    .bus-card.active { border-color: var(--accent); background: #1f2535; }
+
+    .bus-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bus-id {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .bus-status {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .status-running {
+      background: rgba(34,197,94,0.15);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,0.3);
+    }
+
+    .status-stopped {
+      background: rgba(239,68,68,0.15);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+
+    .bus-name {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .bus-meta {
+      display: flex;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .bus-meta span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .bus-meta strong {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    #sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    #sidebar-footer a {
+      display: block;
+      text-align: center;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      padding: 10px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    #sidebar-footer a:hover { opacity: 0.85; }
+
+    /* ── MAP ── */
+    #map { flex: 1; }
+
+    /* Custom bus icon */
+    .bus-icon {
+      background: var(--accent);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .bus-icon span {
+      transform: rotate(45deg);
+      font-size: 14px;
+    }
+
+    /* Popup styling */
+    .leaflet-popup-content-wrapper {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+
+    .leaflet-popup-tip { background: var(--card); }
+
+    .popup-body h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .popup-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .popup-row span:last-child { color: var(--text); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>🚌 Bus<span>Track</span></h1>
+    <p>Private Bus Monitoring System</p>
+    <div id="live-badge">LIVE TRACKING</div>
+  </div>
+
+  <div id="bus-list">
+    <!-- Bus cards injected by JS -->
+  </div>
+
+  <div id="sidebar-footer">
+    <a href="/admin">⚙️ Open Admin Panel</a>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ── MAP SETUP ─────────────────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: false }).setView([28.6139, 77.2090], 13);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO'
+  }).addTo(map);
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  // ── STATE ─────────────────────────────────────────────────────────────────
+  const markers = {};
+  let activeBusId = null;
+
+  // ── BUS ICON ──────────────────────────────────────────────────────────────
+  function makeBusIcon(status) {
+    const color = status === 'Running' ? '#f5a623' : '#ef4444';
+    return L.divIcon({
+      className: '',
+      html: `<div style="background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.4)">
+               <span style="transform:rotate(45deg);font-size:14px">🚌</span>
+             </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -36]
+    });
+  }
+
+  // ── POPUP ─────────────────────────────────────────────────────────────────
+  function makePopup(id, b) {
+    return `<div class="popup-body">
+      <h3>${id}: ${b.name}</h3>
+      <div class="popup-row"><span>Driver</span><span>${b.driver}</span></div>
+      <div class="popup-row"><span>Status</span><span>${b.status}</span></div>
+      <div class="popup-row"><span>Speed</span><span>${b.speed} km/h</span></div>
+      <div class="popup-row"><span>Passengers</span><span>${b.passengers}</span></div>
+      <div class="popup-row"><span>Location</span><span>${b.lat.toFixed(4)}, ${b.lng.toFixed(4)}</span></div>
+    </div>`;
+  }
+
+  // ── SIDEBAR CARD ──────────────────────────────────────────────────────────
+  function makeCard(id, b) {
+    const statusClass = b.status === 'Running' ? 'status-running' : 'status-stopped';
+    return `<div class="bus-card ${activeBusId === id ? 'active' : ''}" id="card-${id}" onclick="focusBus('${id}')">
+      <div class="bus-card-top">
+        <span class="bus-id">${id}</span>
+        <span class="bus-status ${statusClass}">${b.status}</span>
+      </div>
+      <div class="bus-name">${b.name}</div>
+      <div class="bus-meta">
+        <div><strong>${b.speed}</strong><span> km/h</span></div>
+        <div><strong>${b.passengers}</strong><span> passengers</span></div>
+        <div><span>👤 </span><strong>${b.driver.split(' ')[0]}</strong></div>
+      </div>
+    </div>`;
+  }
+
+  // ── FOCUS BUS ─────────────────────────────────────────────────────────────
+  function focusBus(id) {
+    activeBusId = id;
+    if (markers[id]) {
+      map.flyTo(markers[id].getLatLng(), 15, { duration: 1 });
+      markers[id].openPopup();
+    }
+    document.querySelectorAll('.bus-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById('card-' + id);
+    if (card) card.classList.add('active');
+  }
+
+  // ── FETCH AND RENDER BUSES ────────────────────────────────────────────────
+  function updateBuses() {
+    fetch('/api/buses')
+      .then(r => r.json())
+      .then(buses => {
+        const list = document.getElementById('bus-list');
+        list.innerHTML = Object.entries(buses).map(([id, b]) => makeCard(id, b)).join('');
+
+        Object.entries(buses).forEach(([id, b]) => {
+          const latlng = [b.lat, b.lng];
+          const icon = makeBusIcon(b.status);
+          const popup = makePopup(id, b);
+
+          if (markers[id]) {
+            markers[id].setLatLng(latlng).setIcon(icon).setPopupContent(popup);
+          } else {
+            markers[id] = L.marker(latlng, { icon })
+              .addTo(map)
+              .bindPopup(popup, { maxWidth: 240 });
+          }
+        });
+      });
+  }
+
+  // ── AUTO-REFRESH every 3 seconds ──────────────────────────────────────────
+  updateBuses();
+  setInterval(updateBuses, 3000);
+</script>
+</body>
+</html>

@@ -32,10 +32,10 @@ This solution enhances route management, minimizes passenger waiting time, impro
 ### Technologies/Components Used
 
 **For Software:**
-- Languages used: python
+- Languages used: python, HTML
 - Frameworks used: [e.g., React, Django, Spring Boot]
 - Libraries used: [e.g., axios, pandas, JUnit]
-- Tools used: git,vs cod 
+- Tools used: git,vs code
 
 **For Hardware:**
 - Main components: [List main components]
